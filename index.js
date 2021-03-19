@@ -1,16 +1,33 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const srv = http.createServer(app);
+const app = require('express')();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 
-
-const PORT = 8080;
+const PORT = 3000;
+const userData = {}
 
 app.get('/', (req, res) => {
-  res.send('<h1>Howdy BOR</h1>');
+  res.sendFile(__dirname + '/index.html');
 });
 
-srv.listen(PORT, () => {
+io.on('connection', (socket) => {
+  console.log('new user: ', socket.id);
+
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', `<strong>${userData.username}</strong>: msg`);
+  });
+
+  socket.on('set name', name => {
+    userData['username'] = name;
+    console.log('set name to ', userData.username);
+  })
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+
+});
+
+http.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
